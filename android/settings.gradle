@@ -1,0 +1,3 @@
+rootProject.name = 'young_fighters_3295'
+
+include ':app'
