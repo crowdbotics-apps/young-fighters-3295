@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+import io
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,6 +32,29 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+
+try:
+    # Retrieve secrets from Azure Key Vault
+    azure_credentials = DefaultAzureCredential()
+    vault_url = env.str("AZURE_KEYVAULT_RESOURCEENDPOINT", "")
+    vault_secret_name = env.str("AZURE_KEY_VAULT_SECRET_NAME", "secrets")
+    client = SecretClient(vault_url=vault_url, credential=azure_credentials)
+    secret = client.get_secret(vault_secret_name)
+    env.read_env(io.StringIO(secret.value))
+except Exception as e:
+    pass
+
+# Configuration for Azure Storage
+AS_BUCKET_NAME = env.str("AS_BUCKET_NAME", "")
+if AS_BUCKET_NAME:
+    AZURE_ACCOUNT_NAME = AS_BUCKET_NAME
+    AZURE_TOKEN_CREDENTIAL = DefaultAzureCredential()
+    AS_STATIC_CONTAINER = env.str("AS_STATIC_CONTAINER", "static")
+    AS_MEDIA_CONTAINER = env.str("AS_MEDIA_CONTAINER", "media")
+    AZURE_URL_EXPIRATION_SECS = env.int("AZURE_URL_EXPIRATION_SECS", 3600)
+    DEFAULT_FILE_STORAGE = "young_fighters_3295.storage_backends.AzureMediaStorage"
+    STATICFILES_STORAGE = "young_fighters_3295.storage_backends.AzureStaticStorage"
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
